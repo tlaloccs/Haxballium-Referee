@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0A0F0D">
+<title>Haxballium Referee — Control de partido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">●</span>
+      <span class="brand-name">Haxballium <b>Referee</b></span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="partido">Partido</button>
+      <button class="tab" data-tab="historial">Historial</button>
+      <button class="tab" data-tab="ligas">Ligas</button>
+      <button class="tab" data-tab="ajustes">Ajustes</button>
+    </nav>
+  </header>
+
+  <main class="screens">
+
+    <!-- ============ PANTALLA: PARTIDO ============ -->
+    <section id="screen-partido" class="screen active">
+
+      <div id="setupMatch" class="panel setup-panel">
+        <h2>Nuevo partido</h2>
+        <div class="setup-grid">
+          <div class="team-setup">
+            <label>Equipo local</label>
+            <input type="text" id="teamAName" placeholder="Rojo" maxlength="18">
+            <div class="team-setup-row">
+              <input type="color" id="teamAColor" value="#E14B4B">
+              <label class="logo-upload-btn">
+                <input type="file" id="teamALogoInput" accept="image/*" hidden>
+                <span id="teamALogoLabel">+ Escudo</span>
+              </label>
+            </div>
+          </div>
+          <div class="vs-mark">VS</div>
+          <div class="team-setup">
+            <label>Equipo visitante</label>
+            <input type="text" id="teamBName" placeholder="Azul" maxlength="18">
+            <div class="team-setup-row">
+              <input type="color" id="teamBColor" value="#3B82C4">
+              <label class="logo-upload-btn">
+                <input type="file" id="teamBLogoInput" accept="image/*" hidden>
+                <span id="teamBLogoLabel">+ Escudo</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <label>Transmitir a</label>
+        <select id="matchWebhookSelect"></select>
+
+        <button class="btn btn-primary btn-block" id="btnCrearPartido">Crear partido</button>
+        <p class="hint">También podés iniciar partidos directamente desde una liga en la pestaña <b>Ligas</b> — ahí se cargan los escudos y planteles automáticamente.</p>
+      </div>
+
+      <div id="liveMatch" class="live-layout hidden">
+
+        <div class="panel preview-panel">
+          <canvas id="scoreboardCanvas" width="1000" height="560"></canvas>
+          <div class="discord-status" id="discordStatus">
+            <span class="dot" id="discordDot"></span>
+            <span id="discordStatusText">Sin enviar todavía</span>
+          </div>
+        </div>
+
+        <div class="panel control-panel">
+
+          <div class="control-block">
+            <h3>Tiempo</h3>
+            <div class="clock-row">
+              <span class="clock" id="clockDisplay">00:00</span>
+              <span class="half-badge" id="halfBadge">1T</span>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-accent" id="btnIniciar">▶ Iniciar</button>
+              <button class="btn" id="btnPausar">⏸ Pausar</button>
+              <button class="btn" id="btnMedioTiempo">½ Entretiempo</button>
+              <button class="btn btn-danger" id="btnTerminar">🏁 Finalizar</button>
+            </div>
+          </div>
+
+          <div class="control-block">
+            <h3>Goles</h3>
+            <div class="btn-row">
+              <button class="btn btn-team" id="btnGolA">⚽ Gol local</button>
+              <button class="btn btn-team" id="btnGolB">⚽ Gol visitante</button>
+            </div>
+          </div>
+
+          <div class="control-block">
+            <h3>Tarjetas y offside</h3>
+            <div class="btn-row">
+              <button class="btn btn-yellow" id="btnAmarillaA">🟨 Local</button>
+              <button class="btn btn-red" id="btnRojaA">🟥 Local</button>
+              <button class="btn btn-offside" id="btnOffsideA">🚩 Offside local</button>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-yellow" id="btnAmarillaB">🟨 Visitante</button>
+              <button class="btn btn-red" id="btnRojaB">🟥 Visitante</button>
+              <button class="btn btn-offside" id="btnOffsideB">🚩 Offside visitante</button>
+            </div>
+          </div>
+
+          <div class="control-block">
+            <h3>Eventos</h3>
+            <ul class="event-list" id="eventList"></ul>
+            <button class="btn btn-ghost" id="btnDeshacer">Deshacer último evento</button>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ PANTALLA: HISTORIAL ============ -->
+    <section id="screen-historial" class="screen">
+      <div class="panel">
+        <h2>Historial de partidos</h2>
+        <div id="historialList" class="history-list"></div>
+      </div>
+    </section>
+
+    <!-- ============ PANTALLA: LIGAS ============ -->
+    <section id="screen-ligas" class="screen">
+
+      <div class="panel" id="ligasListPanel">
+        <div class="panel-head">
+          <h2>Ligas y torneos</h2>
+          <button class="btn btn-primary" id="btnNuevaLiga">+ Nueva liga</button>
+        </div>
+        <div id="ligasList" class="ligas-list"></div>
+      </div>
+
+      <div class="panel hidden" id="nuevaLigaPanel">
+        <h2>Crear liga o torneo</h2>
+        <label>Nombre de la liga</label>
+        <input type="text" id="ligaNombre" placeholder="Liga Apertura 2026">
+
+        <label>Transmitir partidos de esta liga a</label>
+        <select id="ligaWebhookSelect"></select>
+
+        <label>Formato</label>
+        <div class="format-choice">
+          <label class="radio-card">
+            <input type="radio" name="ligaFormato" value="liga" checked>
+            <span>Liga (todos contra todos)</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="ligaFormato" value="elim">
+            <span>Eliminatoria simple</span>
+          </label>
+          <label class="radio-card">
+            <input type="radio" name="ligaFormato" value="doble_elim">
+            <span>Doble eliminación</span>
+          </label>
+        </div>
+
+        <div id="grupoCountRow">
+          <label>Cantidad de grupos (solo formato Liga)</label>
+          <input type="number" id="ligaGroupCount" min="1" value="1">
+        </div>
+
+        <label>Equipos</label>
+        <div id="ligaEquiposList" class="liga-equipos-list"></div>
+        <div class="add-team-row">
+          <input type="text" id="ligaEquipoNombre" placeholder="Nombre del equipo">
+          <input type="color" id="ligaEquipoColor" value="#4CC38A">
+          <label class="logo-upload-btn small">
+            <input type="file" id="ligaEquipoLogoInput" accept="image/*" hidden>
+            <span id="ligaEquipoLogoLabel">Escudo</span>
+          </label>
+          <select id="ligaEquipoGrupo"></select>
+          <button class="btn" id="btnAgregarEquipoLiga">Agregar</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnGenerarLiga">Generar fixture</button>
+          <button class="btn btn-ghost" id="btnCancelarLiga">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="ligaDetallePanel"></div>
+
+    </section>
+
+    <!-- ============ PANTALLA: AJUSTES ============ -->
+    <section id="screen-ajustes" class="screen">
+      <div class="panel">
+        <h2>Webhooks de Discord</h2>
+        <p class="hint">Guardá uno o más webhooks (uno por canal/servidor) y elegí a cuál transmitir cada partido o liga.</p>
+        <div class="add-team-row">
+          <input type="text" id="newWebhookName" placeholder="Nombre (ej: Canal principal)">
+          <input type="text" id="newWebhookUrl" placeholder="https://discord.com/api/webhooks/....">
+          <button class="btn btn-primary" id="btnAgregarWebhook">+ Agregar</button>
+        </div>
+        <div id="webhooksListContainer" class="liga-equipos-list"></div>
+        <p class="hint" id="webhookHint"></p>
+      </div>
+
+      <div class="panel">
+        <h2>Preferencias</h2>
+        <label>Duración de cada tiempo (minutos, referencia visual)</label>
+        <input type="number" id="halfMinutes" min="1" max="60" value="5">
+        <label>Actualizar imagen en Discord cada (segundos)</label>
+        <input type="number" id="updateIntervalSec" min="3" max="60" value="5">
+        <button class="btn btn-primary" id="btnGuardarAjustes">Guardar preferencias</button>
+      </div>
+
+      <div class="panel">
+        <h2>Copia de seguridad</h2>
+        <p class="hint">Exportá tus ligas e historial a un archivo para pasarlos a otro dispositivo, o importalos de vuelta.</p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnExportar">⬇ Exportar todo</button>
+          <label class="btn logo-upload-btn">
+            <input type="file" id="importarInput" accept="application/json" hidden>
+            <span>⬆ Importar archivo</span>
+          </label>
+        </div>
+        <p class="hint" id="importExportHint"></p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ===== MODAL: nombre de jugador al registrar gol / tarjeta / offside ===== -->
+<div id="eventModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3 id="eventModalTitle">Gol</h3>
+    <label>Jugador (opcional)</label>
+    <input type="text" id="eventModalPlayerInput" list="eventModalPlayerList" placeholder="Nombre del jugador" autocomplete="off">
+    <datalist id="eventModalPlayerList"></datalist>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="eventModalConfirm">Confirmar</button>
+      <button class="btn btn-ghost" id="eventModalCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: elegir webhook antes de jugar un partido de liga en vivo ===== -->
+<div id="webhookPickModal" class="modal-overlay hidden">
+  <div class="modal">
+    <h3>¿A qué webhook transmitir?</h3>
+    <select id="webhookPickSelect"></select>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="webhookPickConfirm">Confirmar</button>
+      <button class="btn btn-ghost" id="webhookPickCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: gestionar plantilla de un equipo ===== -->
+<div id="rosterModal" class="modal-overlay hidden">
+  <div class="modal modal-wide">
+    <div class="panel-head">
+      <h3 id="rosterModalTitle">Plantel</h3>
+      <button class="btn btn-ghost" id="rosterModalClose">✕</button>
+    </div>
+    <div class="add-team-row">
+      <input type="text" id="rosterPlayerName" placeholder="Nombre del jugador">
+      <button class="btn btn-primary" id="btnAgregarJugador">+ Agregar</button>
+    </div>
+    <table class="standings roster-table">
+      <thead><tr><th>Jugador</th><th>Goles</th><th>Asist.</th><th>🟨</th><th>🟥</th><th></th></tr></thead>
+      <tbody id="rosterTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== MODAL: gestionar etiquetas de un grupo ===== -->
+<div id="tagsModal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="panel-head">
+      <h3>Etiquetas</h3>
+      <button class="btn btn-ghost" id="tagsModalClose">✕</button>
+    </div>
+    <div class="add-team-row">
+      <input type="text" id="newTagName" placeholder="Nombre (ej: Clasifica a semis)">
+      <input type="color" id="newTagColor" value="#4CC38A">
+      <button class="btn btn-primary" id="btnAgregarTag">+ Agregar</button>
+    </div>
+    <div id="tagsListContainer" class="liga-equipos-list"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
